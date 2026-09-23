@@ -8,9 +8,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="제주 우리 넷">
-<link rel="manifest" href="./manifest.webmanifest">
-<link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png">
-<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+<link rel="manifest" href="./manifest-pink.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="./favicon-pink-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon-pink.png">
 <title>제주, 우리 넷의 가을</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
@@ -43,8 +43,27 @@ a{color:inherit}
 #fallback svg{width:100%;height:100%}
 .maphint{position:absolute;left:10px;right:10px;bottom:10px;background:rgba(255,255,255,.94);border-radius:10px;padding:8px 10px;font-size:12px;display:none}
 .maphint.show{display:block}
+.map-search{position:absolute;z-index:5;top:10px;left:10px;right:10px;display:flex;gap:6px;padding:5px;background:#fff;border-radius:13px;box-shadow:0 2px 12px rgba(35,48,56,.2)}
+.map-search input{flex:1;min-width:0;border:0;padding:7px 8px;font:inherit;font-size:14px;outline:none}
+.map-search input:focus-visible{outline:2px solid #D94D80;border-radius:6px}
+.map-search button{border:0;border-radius:9px;padding:7px 13px;background:#D94D80;color:#fff;font-weight:800;white-space:nowrap}
+.search-results{margin:8px 16px 0;display:none;background:#fff;border-radius:14px;padding:12px;box-shadow:0 2px 10px rgba(35,48,56,.08)}
+.search-results.show{display:block}
+.search-results-head{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px;margin-bottom:8px}
+.search-results-head button{border:0;background:none;color:var(--stone);font-size:13px}
+.search-results p{margin:5px 0;color:var(--stone);font-size:13px}
+.search-results ul{list-style:none;margin:0;padding:0;max-height:230px;overflow:auto}
+.search-results li{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--line)}
+.search-results li:first-child{border-top:0}
+.search-results .where{flex:1;min-width:0;border:0;background:none;text-align:left;padding:0}
+.search-results .where b{display:block;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.search-results .where small{display:block;color:var(--stone);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.search-results .add-search{border:0;border-radius:8px;padding:7px 9px;background:#D94D80;color:#fff;font-size:12px;font-weight:800;white-space:nowrap}
+.search-results .add-search:disabled{background:#F7E0E9;color:#9B5471;cursor:default}
+.search-pin{width:29px;height:29px;border-radius:50% 50% 50% 4px;transform:rotate(-45deg);display:grid;place-items:center;background:#D94D80;color:#fff;border:2px solid #fff;box-shadow:0 1px 6px rgba(35,48,56,.35);cursor:pointer}
+.search-pin span{transform:rotate(45deg);font-size:12px;font-weight:800}
 .pin{width:28px;height:28px;border-radius:50%;color:#fff;font-weight:800;font-size:14px;display:grid;place-items:center;border:2px solid #fff;box-shadow:0 1px 5px rgba(35,48,56,.4);cursor:pointer}
-.pin.play{background:var(--sea)}.pin.eat{background:var(--tang)}.pin.sweet{background:var(--camellia)}.pin.stay{background:var(--basalt)}
+.pin.play{background:var(--sea)}.pin.eat{background:var(--tang)}.pin.sweet{background:var(--camellia)}.pin.stay{background:var(--basalt)}.pin.custom{background:#D94D80}
 .pin.base{width:auto;height:24px;padding:0 8px;border-radius:7px;font-size:12px;background:var(--basalt)}
 .sec{padding:18px 16px 4px}
 .dayhead h2{margin:0;font-size:21px;font-weight:800;letter-spacing:-.02em}
@@ -78,7 +97,7 @@ input[type=time]{font:inherit;font-size:14px;border:1.5px solid var(--line);bord
 .chip.on{background:var(--basalt);border-color:var(--basalt);color:#fff}
 .list{list-style:none;padding:0;margin:10px 0 0;display:grid;gap:8px}
 .item{display:flex;background:#fff;border-radius:14px;overflow:hidden;border-left:5px solid var(--sea)}
-.item.eat{border-left-color:var(--tang)}.item.sweet{border-left-color:var(--camellia)}.item.stay{border-left-color:var(--basalt)}
+.item.eat{border-left-color:var(--tang)}.item.sweet{border-left-color:var(--camellia)}.item.stay{border-left-color:var(--basalt)}.item.custom{border-left-color:#D94D80}
 .item .body{flex:1;min-width:0;border:0;background:none;text-align:left;padding:10px 12px}
 .item .body b{font-size:15px}
 .item .meta{display:block;font-size:12px;color:var(--stone)}
@@ -127,8 +146,10 @@ input[type=time]{font:inherit;font-size:14px;border:1.5px solid var(--line);bord
   <div class="mapbox">
     <div id="fallback"></div>
     <div id="map"></div>
+    <form class="map-search" id="mapSearchForm" role="search"><input id="mapSearchInput" type="search" placeholder="제주 장소 검색" aria-label="지도에서 장소 검색" autocomplete="off"><button type="submit">찾기</button></form>
     <div class="maphint" id="maphint">카카오 지도를 불러오지 못해 간단 지도로 보여드려요. 카카오 개발자 사이트 &gt; 플랫폼 키 &gt; JavaScript 키 &gt; JavaScript SDK 도메인에 이 주소가 등록돼 있는지 확인해 주세요.</div>
   </div>
+  <div class="search-results" id="searchResults" aria-live="polite"></div>
   <section class="sec" id="plan"></section>
   <section class="sec pick" id="pick"></section>
   <p class="foot">이동 시간은 직선거리로 계산한 대략값이에요. 실제 길은 장소를 눌러 카카오맵 길찾기로 확인하세요. 추석 연휴 영업은 방문 전에 전화로 확인해 주세요.</p>
@@ -139,7 +160,7 @@ input[type=time]{font:inherit;font-size:14px;border:1.5px solid var(--line);bord
 <script>
 const KAKAO_KEY='c70f073ac356ecda66fec820a6cac502';
 const KEY='jeju2026_plan_v1', GEO='jeju2026_geo_v1';
-const CAT={play:'놀거리',eat:'식당',sweet:'디저트',stay:'리조트'};
+const CAT={play:'놀거리',eat:'식당',sweet:'디저트',stay:'리조트',custom:'검색 장소'};
 const DOW=['일','월','화','수','목','금','토'];
 const HOLI={'2026-09-24':'추석','2026-09-25':'추석','2026-09-26':'추석'};
 
@@ -187,7 +208,7 @@ const REC={'2026-09-23':['e01','p10'],'2026-09-24':['p01','e04','p06'],'2026-09-
 
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const byId=id=>BASE[id]||PLACES.find(p=>p.id===id);
+const byId=id=>BASE[id]||PLACES.find(p=>p.id===id)||S.customPlaces.find(p=>p.id===id);
 const pad=n=>String(n).padStart(2,'0');
 const key=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
 const parse=k=>{const [y,m,d]=k.split('-').map(Number);return new Date(y,m-1,d)};
@@ -198,6 +219,7 @@ const fm=m=>{m=Math.round(m);return pad(Math.floor(m/60)%24)+':'+pad(m%60)};
 let S=null;
 try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 if(!S||!S.range) S={range:{from:'2026-09-23',to:'2026-09-26'},plans:{},cur:'2026-09-23'};
+if(!Array.isArray(S.customPlaces))S.customPlaces=[];
 let filter='all';
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 
@@ -248,7 +270,7 @@ function compute(k){
 
 /* ---------- mini island map (SVG) ---------- */
 const COAST=[[126.16,33.31],[126.18,33.36],[126.24,33.41],[126.31,33.45],[126.38,33.47],[126.49,33.51],[126.57,33.52],[126.66,33.54],[126.76,33.56],[126.84,33.55],[126.90,33.52],[126.94,33.46],[126.93,33.43],[126.86,33.34],[126.80,33.31],[126.72,33.28],[126.62,33.25],[126.55,33.24],[126.45,33.24],[126.37,33.23],[126.29,33.20],[126.22,33.22],[126.18,33.26]];
-const CCOL={play:'#0F6E74',eat:'#EF7B1C',sweet:'#C4455A',stay:'#233038'};
+const CCOL={play:'#0F6E74',eat:'#EF7B1C',sweet:'#C4455A',stay:'#233038',custom:'#D94D80'};
 function islandSVG(k,W,H,big,on,only){
   const X=l=>((l-126.12)/0.88*W).toFixed(1),Y=l=>((33.60-l)/0.43*H).toFixed(1);
   const land=COAST.map(c=>X(c[0])+','+Y(c[1])).join(' ');
@@ -301,8 +323,8 @@ function renderPlan(){
 }
 function renderPicker(){
   const k=S.cur,p=plan(k),rec=REC[k]||[],dow=parse(k).getDay();
-  const F=[['all','전체'],['play','놀거리'],['eat','식당'],['sweet','디저트'],['stay','리조트'],['rain','비 오는 날']];
-  let list=PLACES.filter(x=>filter==='all'||(filter==='rain'?x.rain:x.cat===filter));
+  const F=[['all','전체'],['custom','내가 찾은 곳'],['play','놀거리'],['eat','식당'],['sweet','디저트'],['stay','리조트'],['rain','비 오는 날']];
+  let list=[...PLACES,...S.customPlaces].filter(x=>filter==='all'||(filter==='rain'?x.rain:x.cat===filter));
   list=[...list.filter(x=>rec.includes(x.id)),...list.filter(x=>!rec.includes(x.id))];
   let h=`<h3>장소 담기</h3><div class="chips">${F.map(f=>`<button class="chip${filter===f[0]?' on':''}" data-act="filter" data-f="${f[0]}">${f[1]}</button>`).join('')}</div><ul class="list">`;
   list.forEach(x=>{
@@ -313,11 +335,11 @@ function renderPicker(){
     if(x.closed&&x.closed.includes(dow))tags.push(`<span class="off">${DOW[dow]}요일 휴무 가능</span>`);
     if(x.rain)tags.push('<span>비 오는 날</span>');
     if(others.length)tags.push(`<span class="other">${others.join('·')}에 담김</span>`);
-    h+=`<li class="item ${x.cat}${inn?' in':''}"><button class="body" data-act="open" data-id="${x.id}"><b>${esc(x.name)}</b><span class="meta">${CAT[x.cat]} · ${x.area} · ${x.drive}</span><span class="desc">${esc(x.desc)}</span>${tags.length?`<span class="tags">${tags.join('')}</span>`:''}</button><button class="add" data-act="toggle" data-id="${x.id}">${inn?'담김':'담기'}</button></li>`;
+    h+=`<li class="item ${x.cat}${inn?' in':''}"><button class="body" data-act="open" data-id="${x.id}"><b>${esc(x.name)}</b><span class="meta">${CAT[x.cat]} · ${esc(x.area)} · ${esc(x.drive)}</span><span class="desc">${esc(x.desc)}</span>${tags.length?`<span class="tags">${tags.join('')}</span>`:''}</button><button class="add" data-act="toggle" data-id="${x.id}">${inn?'담김':'담기'}</button></li>`;
   });
   $('#pick').innerHTML=h+'</ul>';
 }
-function renderAll(){renderTop();renderTabs();renderPlan();renderPicker();drawMap();save()}
+function renderAll(){renderTop();renderTabs();renderPlan();renderPicker();renderSearchResults();drawMap();save()}
 
 /* ---------- actions ---------- */
 function toggle(id){const k=S.cur,p=plan(k);const i=p.ids.indexOf(id);if(i>=0)p.ids.splice(i,1);else p.ids.push(id);if(!p.manual)optimize(k);renderAll()}
@@ -335,6 +357,9 @@ document.addEventListener('click',e=>{
   else if(a==='rec'){const p=plan(S.cur);(REC[S.cur]||[]).forEach(id=>{if(!p.ids.includes(id))p.ids.push(id)});if(!p.manual)optimize(S.cur);renderAll()}
   else if(a==='clear'){if(confirm('이날 담은 장소를 모두 뺄까요?')){const p=plan(S.cur);p.ids=[];p.manual=false;renderAll()}}
   else if(a==='filter'){filter=el.dataset.f;renderPicker()}
+  else if(a==='searchadd')addSearchResult(+el.dataset.i);
+  else if(a==='searchfocus')focusSearchResult(+el.dataset.i);
+  else if(a==='searchclear')clearSearch();
   else if(a==='cal')openCal();
   else if(a==='calnav'){const d=new Date(cal.y,cal.m+(+el.dataset.d),1);cal.y=d.getFullYear();cal.m=d.getMonth();renderCal()}
   else if(a==='calday')pickDay(el.dataset.k);
@@ -343,6 +368,7 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('change',e=>{if(e.target.id==='st'&&e.target.value){plan(S.cur).start=e.target.value;renderAll()}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
+$('#mapSearchForm').addEventListener('submit',e=>{e.preventDefault();searchPlaces()});
 
 /* ---------- sheet ---------- */
 let sheetMode=null;
@@ -354,7 +380,7 @@ function openPlace(id){
   const search=x.url||('https://map.kakao.com/link/search/'+encodeURIComponent(x.q||x.name));
   const route='https://map.kakao.com/link/to/'+encodeURIComponent(x.name)+','+x.lat+','+x.lng;
   const dow=parse(S.cur).getDay();
-  openSheet(`<h4>${esc(x.name)}</h4><div class="meta">${CAT[x.cat]||''} · ${x.area} · 숙소에서 ${x.drive} · ${x.dur}분 정도</div><p>${esc(x.desc)}</p>${x.tip?`<p class="meta">${esc(x.tip)}</p>`:''}${x.closed&&x.closed.includes(dow)?`<span class="warn">평소 ${DOW[dow]}요일 휴무라고 안내돼 있어요.</span>`:''}<div id="smap"></div><div class="acts"><button class="btn ${inn?'':'dark'}" data-act="toggle" data-id="${x.id}">${inn?md(S.cur)+'에서 빼기':md(S.cur)+'에 담기'}</button><a class="btn" href="${search}" target="_blank" rel="noopener">카카오맵에서 보기</a><a class="btn" href="${route}" target="_blank" rel="noopener">길찾기</a>${x.tel?`<a class="btn" href="tel:${x.tel}">전화 ${x.tel}</a>`:''}</div>`,'place');
+  openSheet(`<h4>${esc(x.name)}</h4><div class="meta">${CAT[x.cat]||''} · ${esc(x.area||'제주')} · 숙소에서 ${esc(x.drive||'위치 확인')} · ${x.dur}분 정도</div><p>${esc(x.desc)}</p>${x.tip?`<p class="meta">${esc(x.tip)}</p>`:''}${x.closed&&x.closed.includes(dow)?`<span class="warn">평소 ${DOW[dow]}요일 휴무라고 안내돼 있어요.</span>`:''}<div id="smap"></div><div class="acts"><button class="btn ${inn?'':'dark'}" data-act="toggle" data-id="${x.id}">${inn?md(S.cur)+'에서 빼기':md(S.cur)+'에 담기'}</button><a class="btn" href="${search}" target="_blank" rel="noopener">카카오맵에서 보기</a><a class="btn" href="${route}" target="_blank" rel="noopener">길찾기</a>${x.tel?`<a class="btn" href="tel:${esc(x.tel)}">전화 ${esc(x.tel)}</a>`:''}</div>`,'place');
   const box=$('#smap');
   if(mapReady){try{new kakao.maps.StaticMap(box,{center:new kakao.maps.LatLng(x.lat,x.lng),level:5,marker:{position:new kakao.maps.LatLng(x.lat,x.lng)}});return}catch(e){}}
   box.innerHTML=islandSVG(null,340,199,true,false,x);
@@ -386,6 +412,74 @@ function confirmCal(){if(!cal.b)return;S.range={from:cal.a,to:cal.b};if(!days().
 
 /* ---------- kakao map ---------- */
 let map=null,mapReady=false,overlays=[],line=null;
+let searchResults=[],searchTerm='',searchMessage='',searchMarkers=[],searchSeq=0;
+function renderSearchResults(){
+  const box=$('#searchResults');
+  if(!searchTerm){box.classList.remove('show');box.innerHTML='';return}
+  box.classList.add('show');
+  let h=`<div class="search-results-head"><b>“${esc(searchTerm)}” 검색 결과</b><button data-act="searchclear">닫기</button></div>`;
+  if(searchMessage)h+=`<p>${esc(searchMessage)}</p>`;
+  if(searchResults.length){
+    h+='<ul>';
+    searchResults.forEach((x,i)=>{
+      const saved=matchSearchPlace(x),inn=saved&&plan(S.cur).ids.includes(saved.id);
+      h+=`<li data-search-index="${i}"><button class="where" data-act="searchfocus" data-i="${i}"><b>${i+1}. ${esc(x.name)}</b><small>${esc(x.category_name||'장소')} · ${esc(x.area)}</small></button><button class="add-search" data-act="searchadd" data-i="${i}" ${inn?'disabled':''}>${inn?'담김':'코스 담기'}</button></li>`;
+    });
+    h+='</ul>';
+  }
+  box.innerHTML=h;
+}
+function clearSearchMarkers(){searchMarkers.forEach(x=>x.setMap(null));searchMarkers=[]}
+function clearSearch(){searchSeq++;searchResults=[];searchTerm='';searchMessage='';$('#mapSearchInput').value='';clearSearchMarkers();renderSearchResults();drawMap()}
+function matchSearchPlace(x){
+  return PLACES.find(p=>p.name===x.name&&hav(p,x)<.3)||S.customPlaces.find(p=>p.id===x.id);
+}
+function searchPlaces(){
+  const q=$('#mapSearchInput').value.trim();
+  if(!q){$('#mapSearchInput').focus();return}
+  searchTerm=q;searchResults=[];searchMessage='검색 중…';renderSearchResults();clearSearchMarkers();
+  const seq=++searchSeq;
+  if(!mapReady||!kakao.maps.services){searchMessage='지도를 불러온 뒤 검색할 수 있어요.';renderSearchResults();return}
+  const bounds=new kakao.maps.LatLngBounds(new kakao.maps.LatLng(33.1,126.1),new kakao.maps.LatLng(33.6,126.99));
+  new kakao.maps.services.Places().keywordSearch(q,(data,status)=>{
+    if(seq!==searchSeq)return;
+    searchResults=[];
+    if(status===kakao.maps.services.Status.OK){
+      searchResults=data.map(p=>{
+        const lat=Number(p.y),lng=Number(p.x),pid=String(p.id||'').replace(/\D/g,'');
+        if(!pid||!Number.isFinite(lat)||!Number.isFinite(lng)||lat<33.1||lat>33.6||lng<126.1||lng>126.99)return null;
+        const name=String(p.place_name||'').trim();if(!name)return null;
+        const area=String(p.road_address_name||p.address_name||'제주');
+        return{id:'k'+pid,cat:'custom',name,lat,lng,area,drive:'약 '+legMin(BASE.RES,{lat,lng})+'분',dur:60,desc:String(p.category_name||area),tip:'지도 검색으로 추가 · 머무는 시간 60분 기준',url:'https://place.map.kakao.com/'+pid,tel:String(p.phone||'').replace(/[^0-9-]/g,''),category_name:String(p.category_name||'장소')};
+      }).filter(Boolean).slice(0,10);
+    }
+    searchMessage=searchResults.length?'결과를 눌러 지도에서 확인하거나 코스에 담아보세요.':status===kakao.maps.services.Status.ZERO_RESULT?'제주에서 검색 결과가 없어요. 다른 이름으로 검색해 보세요.':'검색할 수 없어요. 잠시 후 다시 시도해 주세요.';
+    renderSearchResults();drawSearchMarkers();
+    if(searchResults.length===1){map.setCenter(new kakao.maps.LatLng(searchResults[0].lat,searchResults[0].lng));map.setLevel(5)}
+    else if(searchResults.length>1){const b=new kakao.maps.LatLngBounds();searchResults.forEach(x=>b.extend(new kakao.maps.LatLng(x.lat,x.lng)));map.setBounds(b,55,45,35,45)}
+  },{bounds,size:15});
+}
+function drawSearchMarkers(){
+  clearSearchMarkers();if(!mapReady)return;
+  searchResults.forEach((x,i)=>{
+    const el=document.createElement('div');el.className='search-pin';el.innerHTML='<span>'+(i+1)+'</span>';
+    el.addEventListener('click',()=>focusSearchResult(i));
+    const pin=new kakao.maps.CustomOverlay({position:new kakao.maps.LatLng(x.lat,x.lng),content:el,xAnchor:.5,yAnchor:1,zIndex:30+i});
+    pin.setMap(map);searchMarkers.push(pin);
+  });
+}
+function focusSearchResult(i){
+  const x=searchResults[i];if(!x||!mapReady)return;
+  map.setCenter(new kakao.maps.LatLng(x.lat,x.lng));map.setLevel(5);
+  const row=$('#searchResults [data-search-index="'+i+'"]');if(row)row.scrollIntoView({block:'nearest'});
+}
+function addSearchResult(i){
+  const x=searchResults[i];if(!x)return;
+  let place=matchSearchPlace(x);
+  if(!place){place={...x};delete place.category_name;S.customPlaces.push(place)}
+  const p=plan(S.cur);
+  if(!p.ids.includes(place.id)){p.ids.push(place.id);if(!p.manual)optimize(S.cur);renderAll()}
+}
 function drawMap(){
   $('#fallback').innerHTML=islandSVG(S.cur,340,199,true,false);
   if(!mapReady)return;
@@ -404,7 +498,7 @@ function drawMap(){
   r.stops.forEach((s,i)=>addPin(s.p,i+1,s.p.cat,s.p.id,10+i));
   const b=new kakao.maps.LatLngBounds();path.forEach(l=>b.extend(l));
   if(r.stops.length===0&&r.start.id===r.end.id){map.setCenter(path[0]);map.setLevel(7)}
-  else map.setBounds(b,50,40,50,40);
+  else map.setBounds(b,70,40,50,40);
 }
 function loadKakao(){
   const s=document.createElement('script');
