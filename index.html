@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#233038">
+<meta name="description" content="제주 가족여행 일정과 장소를 한눈에 살펴보고 동선을 계획하는 앱">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="제주 우리 넷">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+<title>제주, 우리 넷의 가을</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root{--mist:#EEF3F2;--card:#fff;--basalt:#233038;--sea:#0F6E74;--tang:#EF7B1C;--camellia:#C4455A;--stone:#6F7D83;--line:#D7E0DF;--warn:#A4480F;--warnbg:#FFF0E2}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:Pretendard,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;background:var(--mist);color:var(--basalt);font-size:15px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--tang);outline-offset:2px}
+.wrap{max-width:560px;margin:0 auto;padding-bottom:calc(32px + env(safe-area-inset-bottom))}
+.top{position:sticky;top:0;z-index:20;background:var(--basalt);color:#fff;padding:calc(env(safe-area-inset-top) + 12px) 16px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.top h1{margin:0;font-size:18px;font-weight:800;letter-spacing:-.02em}
+.range{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.13);border:0;border-radius:10px;padding:8px 12px;color:#fff;font-weight:600;font-size:14px;white-space:nowrap}
+.range svg{width:16px;height:16px}
+.days{display:flex;gap:8px;overflow-x:auto;padding:12px 16px;scrollbar-width:none}
+.days::-webkit-scrollbar{display:none}
+.day{flex:0 0 auto;width:118px;background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:8px 10px 6px;text-align:left}
+.day b{display:block;font-size:15px;font-weight:800}
+.day small{display:block;font-size:12px;color:var(--stone)}
+.day svg{display:block;width:96px;height:56px;margin-top:2px}
+.day.on{background:var(--basalt);border-color:var(--basalt);color:#fff}
+.day.on small{color:rgba(255,255,255,.72)}
+.hol{color:var(--camellia);font-weight:700}
+.day.on .hol{color:#FFB3BE}
+.mapbox{position:relative;margin:0 16px;height:44vh;min-height:280px;max-height:440px;border-radius:16px;overflow:hidden;background:#DCE6E5}
+#map,#fallback{position:absolute;inset:0}
+#map{visibility:hidden}
+#map.ready{visibility:visible}
+#fallback svg{width:100%;height:100%}
+.maphint{position:absolute;left:10px;right:10px;bottom:10px;background:rgba(255,255,255,.94);border-radius:10px;padding:8px 10px;font-size:12px;display:none}
+.maphint.show{display:block}
+.pin{width:28px;height:28px;border-radius:50%;color:#fff;font-weight:800;font-size:14px;display:grid;place-items:center;border:2px solid #fff;box-shadow:0 1px 5px rgba(35,48,56,.4);cursor:pointer}
+.pin.play{background:var(--sea)}.pin.eat{background:var(--tang)}.pin.sweet{background:var(--camellia)}.pin.stay{background:var(--basalt)}
+.pin.base{width:auto;height:24px;padding:0 8px;border-radius:7px;font-size:12px;background:var(--basalt)}
+.sec{padding:18px 16px 4px}
+.dayhead h2{margin:0;font-size:21px;font-weight:800;letter-spacing:-.02em}
+.dayhead p{margin:2px 0 0;color:var(--stone);font-size:14px}
+.note{margin:10px 0 0;font-size:13px;background:#FBE9EC;color:#8E2B3B;border-radius:10px;padding:8px 10px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.row label{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600}
+input[type=time]{font:inherit;font-size:14px;border:1.5px solid var(--line);border-radius:10px;padding:5px 8px;background:#fff;color:var(--basalt)}
+.btn{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:6px 12px;font-size:13px;font-weight:600}
+.btn.dark{background:var(--basalt);border-color:var(--basalt);color:#fff}
+.btn.ghost{border-color:transparent;background:none;color:var(--stone)}
+.tl{list-style:none;margin:14px 0 0;padding:0}
+.node{display:flex;gap:10px;align-items:flex-start;background:#fff;border-radius:14px;padding:10px 12px}
+.node .t{flex:0 0 44px;font-weight:800;font-size:15px;font-variant-numeric:tabular-nums;padding-top:3px}
+.node .pin{flex:0 0 auto;margin-top:1px;cursor:default}
+.node .info{flex:1;min-width:0}
+.node .info button{border:0;background:none;padding:0;text-align:left;font-weight:700;font-size:15px}
+.node .meta{display:block;font-size:12px;color:var(--stone)}
+.node.base{background:transparent;padding:6px 12px}
+.warn{display:block;margin-top:4px;font-size:12px;color:var(--warn);background:var(--warnbg);border-radius:6px;padding:3px 7px}
+.ctl{display:flex;gap:4px;flex:0 0 auto}
+.ctl button{width:30px;height:30px;border:1.5px solid var(--line);background:#fff;border-radius:8px;font-size:13px;display:grid;place-items:center;padding:0}
+.ctl button:disabled{opacity:.3;cursor:default}
+.leg{margin-left:34px;border-left:3px solid var(--basalt);padding:5px 0 5px 16px;font-size:12px;color:var(--stone)}
+.endwarn{margin-top:10px}
+.empty{background:#fff;border:1.5px dashed var(--line);border-radius:14px;padding:14px;font-size:14px;color:var(--stone);margin:0}
+.pick h3{margin:0;font-size:18px;font-weight:800}
+.chips{display:flex;gap:6px;overflow-x:auto;margin-top:10px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:5px 13px;font-size:13px;font-weight:600;white-space:nowrap}
+.chip.on{background:var(--basalt);border-color:var(--basalt);color:#fff}
+.list{list-style:none;padding:0;margin:10px 0 0;display:grid;gap:8px}
+.item{display:flex;background:#fff;border-radius:14px;overflow:hidden;border-left:5px solid var(--sea)}
+.item.eat{border-left-color:var(--tang)}.item.sweet{border-left-color:var(--camellia)}.item.stay{border-left-color:var(--basalt)}
+.item .body{flex:1;min-width:0;border:0;background:none;text-align:left;padding:10px 12px}
+.item .body b{font-size:15px}
+.item .meta{display:block;font-size:12px;color:var(--stone)}
+.item .desc{display:block;font-size:13px;margin-top:2px}
+.tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.tags span{font-size:11px;font-weight:700;border-radius:6px;padding:1px 6px;background:#E6EEED;color:var(--sea)}
+.tags .rec{background:var(--basalt);color:#fff}
+.tags .off{background:var(--warnbg);color:var(--warn)}
+.tags .other{background:#F0F0F0;color:var(--stone)}
+.add{flex:0 0 64px;border:0;border-left:1px solid var(--line);background:#fff;font-weight:800;font-size:13px;color:var(--sea)}
+.item.in .add{background:var(--basalt);color:#fff}
+.foot{padding:20px 16px 0;font-size:12px;color:var(--stone)}
+.scrim{position:fixed;inset:0;z-index:50;background:rgba(35,48,56,.45);opacity:0;pointer-events:none;transition:opacity .2s}
+.scrim.open{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:51;max-width:560px;margin:0 auto;background:#fff;border-radius:20px 20px 0 0;padding:14px 16px calc(18px + env(safe-area-inset-bottom));max-height:88vh;overflow:auto;transform:translateY(105%);transition:transform .25s ease}
+.sheet.open{transform:none}
+@media (prefers-reduced-motion:reduce){.sheet,.scrim{transition:none}}
+.grab{width:40px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 12px}
+.sheet h4{margin:0;font-size:20px;font-weight:800}
+.sheet .meta{font-size:13px;color:var(--stone)}
+.sheet p{margin:8px 0 0}
+#smap{height:170px;border-radius:12px;overflow:hidden;margin-top:12px;background:#E3EAEA}
+#smap svg{width:100%;height:100%}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.acts .btn{text-decoration:none;display:inline-flex;align-items:center;padding:9px 14px;font-size:14px}
+.calhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.calhead b{font-size:17px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center}
+.cal .dw{font-size:12px;color:var(--stone);padding:4px 0}
+.cal button{border:0;background:none;border-radius:10px;height:46px;font-weight:600;font-size:15px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1}
+.cal button small{font-size:10px;color:var(--camellia);font-weight:700}
+.cal .sun{color:var(--camellia)}
+.cal .mid{background:#DCE8E7}
+.cal .edge{background:var(--basalt);color:#fff}
+.cal .edge small{color:#FFB3BE}
+.calhint{font-size:13px;color:var(--stone);margin:10px 0 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>제주, 우리 넷의 가을</h1>
+    <button class="range" id="rangeBtn" data-act="cal" aria-label="여행 기간 바꾸기"></button>
+  </header>
+  <nav class="days" id="days" aria-label="날짜 선택"></nav>
+  <div class="mapbox">
+    <div id="fallback"></div>
+    <div id="map"></div>
+    <div class="maphint" id="maphint">카카오 지도를 불러오지 못해 간단 지도로 보여드려요. 카카오 개발자 사이트 &gt; 플랫폼 키 &gt; JavaScript 키 &gt; JavaScript SDK 도메인에 이 주소가 등록돼 있는지 확인해 주세요.</div>
+  </div>
+  <section class="sec" id="plan"></section>
+  <section class="sec pick" id="pick"></section>
+  <p class="foot">이동 시간은 직선거리로 계산한 대략값이에요. 실제 길은 장소를 눌러 카카오맵 길찾기로 확인하세요. 추석 연휴 영업은 방문 전에 전화로 확인해 주세요.</p>
+</div>
+<div class="scrim" id="scrim" data-act="close"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true"><div class="grab"></div><div id="sheetBody"></div></div>
+
+<script>
+const KAKAO_KEY='c70f073ac356ecda66fec820a6cac502';
+const KEY='jeju2026_plan_v1', GEO='jeju2026_geo_v1';
+const CAT={play:'놀거리',eat:'식당',sweet:'디저트',stay:'리조트'};
+const DOW=['일','월','화','수','목','금','토'];
+const HOLI={'2026-09-24':'추석','2026-09-25':'추석','2026-09-26':'추석'};
+
+const BASE={
+  RES:{id:'RES',name:'금호제주리조트',short:'숙소',lat:33.2777,lng:126.7190,q:'금호제주리조트'},
+  AIR:{id:'AIR',name:'제주공항 · 렌터카 인수',short:'공항',lat:33.5066,lng:126.4929,q:'제주국제공항'},
+  RENT:{id:'RENT',name:'렌터카 반납',short:'반납',lat:33.5010,lng:126.4960,q:false}
+};
+
+const PLACES=[
+ {id:'p01',cat:'play',name:'제주민속촌',area:'표선',drive:'25~35분',dur:150,lat:33.3222,lng:126.8420,desc:'만들기·떡메치기·달고나까지 추석을 직접 즐겨요. 이번 여행 1순위.',tip:'9/24~27 추석 행사 · 체험 10~12시 / 13~15시'},
+ {id:'p02',cat:'play',name:'하효살롱',area:'하효',drive:'15~20분',dur:90,rain:1,tel:'064-732-8181',lat:33.2620,lng:126.6180,desc:'조청·감귤칩·튀밥으로 과즐 만들기. 완성한 간식은 기념품으로.',tip:'사전 예약 필요 · 추석 운영 문의'},
+ {id:'p03',cat:'play',name:'윈드1947',area:'토평',drive:'25~30분',dur:90,lat:33.2720,lng:126.5950,desc:'부모와 함께 타는 2인승 카트. 어른 한 명에 아이 한 명씩.',tip:'36개월 이상 동승 · 현장 기준·날씨 확인'},
+ {id:'p04',cat:'play',name:'쇠소깍 테우',area:'하효',drive:'15~20분',dur:60,lat:33.2525,lng:126.6235,q:'쇠소깍 테우',desc:'가족이 함께 전통 뗏목 타기. 5세 아이가 있어 테우 추천.',tip:'회차 예약 권장 · 연령·잔여석·운항 확인'},
+ {id:'p05',cat:'play',name:'스누피가든',area:'구좌',drive:'45~55분',dur:150,lat:33.4446,lng:126.7790,desc:'캐릭터를 찾으며 정원 탐험. 실내·야외 합쳐 2~3시간.',tip:'입장권 예매 가능 · 평소 연중무휴'},
+ {id:'p06',cat:'play',name:'표선해변',area:'표선',drive:'25~35분',dur:90,lat:33.3265,lng:126.8355,q:'표선해수욕장',desc:'모래성·길 만들기. 민속촌과 묶으면 이동이 줄어요.',tip:'모래놀이 도구·여벌옷 준비'},
+ {id:'p07',cat:'play',name:'에코랜드 테마파크',area:'조천',drive:'45~55분',dur:120,lat:33.4560,lng:126.6690,q:'에코랜드',desc:'기차 타고 숲과 정원 돌아보기. 기차 좋아하는 아이에게.',tip:'일반 입장권 · 열차 좌석 지정 아님'},
+ {id:'p08',cat:'play',name:'헬로키티아일랜드',area:'안덕',drive:'55~65분',dur:120,rain:1,lat:33.2893,lng:126.3517,desc:'캐릭터 공간을 좋아한다면. 비 오는 날 후보.',tip:'추석 특별 운영 미확인'},
+ {id:'p09',cat:'play',name:'제주항공우주박물관',area:'안덕',drive:'65~75분',dur:180,rain:1,lat:33.3048,lng:126.3428,desc:'실물 비행기·우주 전시·영유아 체험공간. 비 오는 날 반나절.',tip:'체험별 연령·회차 확인 · 추석 운영 미확인'},
+ {id:'p10',cat:'play',name:'남원큰엉 해안산책로',area:'숙소 뒤',drive:'걸어서',dur:40,lat:33.2790,lng:126.7215,q:'큰엉해안경승지',desc:'나무 사이 한반도 모양 찾기. 20~40분 짧은 탐험.',tip:'무료 · 절벽 구간은 아이 손잡기'},
+ {id:'r01',cat:'stay',name:'금호리조트 수영장',area:'숙소',drive:'숙소 안',dur:90,atRes:1,lat:33.2777,lng:126.7190,q:false,desc:'리조트 수영장에서 신나게 물놀이.',tip:'운영시간·수영모 규정은 프런트 확인'},
+ {id:'r02',cat:'stay',name:'숙소에서 쉬기',area:'숙소',drive:'숙소 안',dur:60,atRes:1,lat:33.2777,lng:126.7190,q:false,desc:'낮잠이나 간식 시간. 오후 일정 전 충전.',tip:''},
+ {id:'e01',cat:'eat',name:'남원수제돈까스',area:'남원',drive:'5~10분',dur:60,closed:[1],lat:33.2810,lng:126.7110,desc:'등심·치즈돈가스. 아이들 밥부터 편하게.',tip:'첫날 식사 후보'},
+ {id:'e02',cat:'eat',name:'동선제면가',area:'위미',drive:'15~20분',dur:60,closed:[3],lat:33.2760,lng:126.6610,desc:'고기국수·돔베고기·만두. 부모는 몰망국수도.',tip:'점심 추천'},
+ {id:'e03',cat:'eat',name:'남원흑돼지연탄골목',area:'남원',drive:'5~10분',dur:80,tel:'064-764-7156',lat:33.2800,lng:126.7160,desc:'여행 중 한 번은 흑돼지 저녁. 숙소 가까워 부담 적어요.',tip:'4인 자리 문의 추천'},
+ {id:'e04',cat:'eat',name:'당케올레국수',area:'표선',drive:'25~35분',dur:70,lat:33.3240,lng:126.8400,desc:'보말칼국수·보말죽·고기국수.',tip:'현장 대기 예상 · 이른 점심 추천'},
+ {id:'e05',cat:'eat',name:'하효소머리국밥',area:'하효',drive:'15~20분',dur:60,lat:33.2610,lng:126.6190,desc:'국밥·수육으로 든든하게. 아이 것은 다대기 따로.',tip:'하효살롱·쇠소깍과 연결'},
+ {id:'e06',cat:'eat',name:'쇠소깍 복순이네',area:'하효',drive:'15~20분',dur:60,lat:33.2545,lng:126.6215,desc:'부모는 조림·해물, 아이는 생선구이·국.',tip:'아이 먹을 구이 메뉴 확인'},
+ {id:'e07',cat:'eat',name:'네거리식당',area:'서귀포 시내',drive:'30~40분',dur:60,lat:33.2470,lng:126.5645,q:'네거리식당 서귀포',desc:'갈치구이·갈치국·조림. 아이는 생선구이로.',tip:'점심 피크 전 방문'},
+ {id:'e08',cat:'eat',name:'어진이네횟집',area:'보목',drive:'20~30분',dur:60,lat:33.2440,lng:126.6005,desc:'부모는 물회, 아이는 전복돌솥밥·구이.',tip:'아이용 메뉴 먼저 확인'},
+ {id:'e09',cat:'eat',name:'오는정김밥',area:'서귀포 시내',drive:'30~35분',dur:20,takeout:1,lat:33.2555,lng:126.5635,desc:'기본·치즈·떡갈비김밥 포장. 숙소에서 편히 먹는 한 끼.',tip:'포장 예약 방식·수령 시간 확인 필수'},
+ {id:'e10',cat:'eat',name:'미미파스타',area:'하례',drive:'20~25분',dur:60,closed:[0,6],lat:33.2690,lng:126.6430,desc:'피자·파스타로 메뉴 바꾸고 싶은 날.',tip:''},
+ {id:'s01',cat:'sweet',name:'모노클제주',area:'위미',drive:'10~15분',dur:45,closed:[3],lat:33.2770,lng:126.6640,desc:'단호박 치즈케이크·클래식 스콘.',tip:'홀케이크 예약 가능'},
+ {id:'s02',cat:'sweet',name:'내노키카페',area:'남원',drive:'15~25분',dur:45,lat:33.2920,lng:126.6960,desc:'수제 푸딩과 귤밭 돌창고. 간식 시간에 한 곳만 고른다면.',tip:'푸딩 재고 확인'},
+ {id:'s03',cat:'sweet',name:'보래드 베이커스',area:'보목',drive:'25~30분',dur:45,lat:33.2450,lng:126.5985,q:'보래드베이커스',desc:'빵 고르고 바다 보며 쉬기.',tip:'호텔 서귀피안 1층'},
+ {id:'s04',cat:'sweet',name:'레몬뮤지엄',area:'남원',drive:'20~30분',dur:45,lat:33.2990,lng:126.6760,desc:'레몬 아이스크림·무스·에이드.',tip:'체험 운영은 따로 문의'},
+ {id:'s05',cat:'sweet',name:'카페블루하우스 서귀포시청점',area:'서귀포 시내',drive:'30~35분',dur:40,lat:33.2535,lng:126.5605,q:'카페블루하우스 서귀포',desc:'아이는 에그타르트, 부모는 홍콩 밀크티.',tip:'타르트 재고 확인'},
+ {id:'s06',cat:'sweet',name:'연과자점',area:'서귀포 시내',drive:'30~35분',dur:20,lat:33.2495,lng:126.5615,desc:'마들렌 여러 맛 골라 포장.',tip:'시내 일정에 묶어 포장'},
+ {id:'s07',cat:'sweet',name:'테라로사 서귀포점',area:'하효 인근',drive:'20~25분',dur:50,lat:33.2600,lng:126.6060,desc:'부모 커피까지 챙기는 휴식 시간.',tip:'평소 매일 09~21시 · 전용 주차장'},
+ {id:'s08',cat:'sweet',name:'귤꽃다락',area:'서호',drive:'40~45분',dur:50,lat:33.2640,lng:126.5150,desc:'청귤무스케이크·귤양갱. 귤밭 분위기.',tip:'아동 동반 동의서 안내'},
+ {id:'s09',cat:'sweet',name:'서귀샌드',area:'서귀포 시내',drive:'30~35분',dur:20,lat:33.2500,lng:126.5660,desc:'한라봉 샌드쿠키. 선물로도 좋아요.',tip:'박스 포장·재고 문의'},
+ {id:'s10',cat:'sweet',name:'서연의집',area:'위미',drive:'10~15분',dur:40,lat:33.2700,lng:126.6690,q:'서연의집 위미',desc:'가까운 바다 전망 카페.',tip:'바다 보며 잠깐 쉬어가기'}
+];
+const REC={'2026-09-23':['e01','p10'],'2026-09-24':['p01','e04','p06'],'2026-09-25':['p02','e05','s03'],'2026-09-26':['p07']};
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const byId=id=>BASE[id]||PLACES.find(p=>p.id===id);
+const pad=n=>String(n).padStart(2,'0');
+const key=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const parse=k=>{const [y,m,d]=k.split('-').map(Number);return new Date(y,m-1,d)};
+const md=k=>{const d=parse(k);return (d.getMonth()+1)+'.'+d.getDate()+' '+DOW[d.getDay()]};
+const toMin=t=>{const [h,m]=t.split(':').map(Number);return h*60+m};
+const fm=m=>{m=Math.round(m);return pad(Math.floor(m/60)%24)+':'+pad(m%60)};
+
+let S=null;
+try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+if(!S||!S.range) S={range:{from:'2026-09-23',to:'2026-09-26'},plans:{},cur:'2026-09-23'};
+let filter='all';
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+
+function days(){const out=[];let d=parse(S.range.from);const e=parse(S.range.to);while(d<=e){out.push(key(d));d=new Date(d.getFullYear(),d.getMonth(),d.getDate()+1)}return out}
+function plan(k){if(!S.plans[k])S.plans[k]={ids:[],manual:false,start:null};return S.plans[k]}
+function role(k){const ds=days(),i=ds.indexOf(k);if(ds.length===1)return 'both';if(i===0)return 'arrive';if(i===ds.length-1)return 'depart';return 'stay'}
+const ROLE={
+  arrive:{t:'도착일',s:'3시 비행기 → 도착해서 렌터카 받고 출발'},
+  stay:{t:'리조트에서 출발',s:'금호제주리조트에서 나갔다가 돌아와요'},
+  depart:{t:'돌아가는 날',s:'렌터카 3시 반납 · 4시 비행기'},
+  both:{t:'당일 일정',s:'공항에서 출발해 렌터카 반납까지'}
+};
+function startTime(k){const p=plan(k),r=role(k);return p.start||((r==='arrive'||r==='both')?'16:30':'09:30')}
+function ends(k){const r=role(k);return{start:(r==='arrive'||r==='both')?BASE.AIR:BASE.RES,end:(r==='depart'||r==='both')?BASE.RENT:BASE.RES}}
+
+function hav(a,b){const R=6371,t=Math.PI/180,dLa=(b.lat-a.lat)*t,dLo=(b.lng-a.lng)*t;const x=Math.sin(dLa/2)**2+Math.cos(a.lat*t)*Math.cos(b.lat*t)*Math.sin(dLo/2)**2;return 2*R*Math.asin(Math.sqrt(x))}
+function legMin(a,b){const d=hav(a,b);if(d<0.4)return 2;return Math.round(d*1.35/40*60+6)}
+function cost(s,e,arr){let c=0,p=s;for(const x of arr){c+=legMin(p,x);p=x}return c+legMin(p,e)}
+function permute(a,cb){const n=a.length,c=new Array(n).fill(0),arr=a.slice();cb(arr);let i=0;while(i<n){if(c[i]<i){if(i%2===0)[arr[0],arr[i]]=[arr[i],arr[0]];else[arr[c[i]],arr[i]]=[arr[i],arr[c[i]]];cb(arr);c[i]++;i=0}else{c[i]=0;i++}}}
+function optimize(k){
+  const p=plan(k),{start,end}=ends(k),pts=p.ids.map(byId).filter(Boolean);
+  if(pts.length<2)return;
+  let best=pts.slice(),bc=cost(start,end,pts);
+  if(pts.length<=7){permute(pts,arr=>{const c=cost(start,end,arr);if(c<bc){bc=c;best=arr.slice()}})}
+  else{
+    let rest=pts.slice(),cur=start,route=[];
+    while(rest.length){rest.sort((a,b)=>legMin(cur,a)-legMin(cur,b));cur=rest.shift();route.push(cur)}
+    let imp=true;
+    while(imp){imp=false;for(let i=0;i<route.length-1;i++)for(let j=i+1;j<route.length;j++){const r2=route.slice(0,i).concat(route.slice(i,j+1).reverse(),route.slice(j+1));if(cost(start,end,r2)<cost(start,end,route)){route=r2;imp=true}}}
+    best=route;
+  }
+  p.ids=best.map(x=>x.id);
+}
+
+function compute(k){
+  const p=plan(k),r=role(k),{start,end}=ends(k),dow=parse(k).getDay();
+  let t=toMin(startTime(k)),prev=start;const stops=[];
+  p.ids.map(byId).filter(Boolean).forEach(x=>{
+    const leg=legMin(prev,x);t+=leg;const arr=t;t+=x.dur;
+    const w=[];
+    if(x.closed&&x.closed.includes(dow))w.push('평소 '+DOW[dow]+'요일 휴무라고 안내돼 있어요. 전화로 확인해 주세요.');
+    if(x.cat==='eat'&&!x.takeout&&!((arr>=660&&arr<=870)||(arr>=1020&&arr<=1230)))w.push('식사 시간과 조금 어긋나요. ↑↓로 순서를 옮겨보세요.');
+    stops.push({p:x,leg,arr,dep:t,w});prev=x;
+  });
+  const lastLeg=legMin(prev,end);t+=lastLeg;
+  return{start,end,stops,lastLeg,endArr:t,role:r};
+}
+
+/* ---------- mini island map (SVG) ---------- */
+const COAST=[[126.16,33.31],[126.18,33.36],[126.24,33.41],[126.31,33.45],[126.38,33.47],[126.49,33.51],[126.57,33.52],[126.66,33.54],[126.76,33.56],[126.84,33.55],[126.90,33.52],[126.94,33.46],[126.93,33.43],[126.86,33.34],[126.80,33.31],[126.72,33.28],[126.62,33.25],[126.55,33.24],[126.45,33.24],[126.37,33.23],[126.29,33.20],[126.22,33.22],[126.18,33.26]];
+const CCOL={play:'#0F6E74',eat:'#EF7B1C',sweet:'#C4455A',stay:'#233038'};
+function islandSVG(k,W,H,big,on,only){
+  const X=l=>((l-126.12)/0.88*W).toFixed(1),Y=l=>((33.60-l)/0.43*H).toFixed(1);
+  const land=COAST.map(c=>X(c[0])+','+Y(c[1])).join(' ');
+  let pts,cats=[],inner='';
+  if(only){pts=[only];cats=[only.cat||'stay']}
+  else{const r=compute(k);pts=[r.start,...r.stops.map(s=>s.p),r.end];cats=['base',...r.stops.map(s=>s.p.cat),'base']}
+  const lineCol=on?'#EF7B1C':'#233038';
+  const landFill=on?'rgba(255,255,255,.14)':'#E4ECEA', landStroke=on?'rgba(255,255,255,.35)':'#C7D3D1';
+  if(!only&&pts.length>1)inner+=`<polyline points="${pts.map(p=>X(p.lng)+','+Y(p.lat)).join(' ')}" fill="none" stroke="${lineCol}" stroke-width="${big?2.5:1.6}" stroke-linejoin="round"/>`;
+  pts.forEach((p,i)=>{
+    const c=cats[i];
+    if(c==='base'){inner+=`<rect x="${(X(p.lng)-(big?5:2.5))}" y="${(Y(p.lat)-(big?5:2.5))}" width="${big?10:5}" height="${big?10:5}" rx="${big?2:1}" fill="${on?'#fff':'#233038'}"/>`}
+    else{inner+=`<circle cx="${X(p.lng)}" cy="${Y(p.lat)}" r="${big?8:2.8}" fill="${CCOL[c]}" stroke="#fff" stroke-width="${big?1.5:.8}"/>`;
+      if(big&&!only)inner+=`<text x="${X(p.lng)}" y="${(+Y(p.lat)+3.5).toFixed(1)}" font-size="10" font-weight="800" fill="#fff" text-anchor="middle">${i}</text>`}
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><polygon points="${land}" fill="${landFill}" stroke="${landStroke}" stroke-width="1"/>${inner}</svg>`;
+}
+
+/* ---------- render ---------- */
+function renderTop(){
+  $('#rangeBtn').innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>${md(S.range.from)} – ${md(S.range.to)}`;
+}
+function renderTabs(){
+  $('#days').innerHTML=days().map(k=>{
+    const n=plan(k).ids.length,on=k===S.cur;
+    return `<button class="day${on?' on':''}" data-act="day" data-k="${k}" aria-pressed="${on}"><b>${md(k)}</b><small>${ROLE[role(k)].t} · ${n?n+'곳':'비어 있음'}${HOLI[k]?' <span class="hol">'+HOLI[k]+'</span>':''}</small>${islandSVG(k,96,56,false,on)}</button>`;
+  }).join('');
+  const el=$('#days .on');if(el)el.scrollIntoView({block:'nearest',inline:'nearest'});
+}
+function renderPlan(){
+  const k=S.cur,r=compute(k),p=plan(k),d=parse(k),info=ROLE[r.role];
+  const rec=REC[k]&&REC[k].some(id=>!p.ids.includes(id));
+  let h=`<div class="dayhead"><h2>${d.getMonth()+1}월 ${d.getDate()}일 ${DOW[d.getDay()]}요일 · ${info.t}</h2><p>${info.s}</p></div>`;
+  if(k==='2026-09-25')h+=`<p class="note">추석 당일이에요. 식당·카페는 점심 한 곳, 저녁 한 곳씩 영업을 꼭 확인해 주세요.</p>`;
+  else if(HOLI[k])h+=`<p class="note">추석 연휴예요. 가기 전에 영업 여부를 한 번 확인해 주세요.</p>`;
+  h+=`<div class="row"><label>출발 <input type="time" id="st" value="${startTime(k)}"></label>${p.ids.length>1?`<button class="btn${p.manual?' dark':''}" data-act="auto">동선 자동 정리</button>`:''}${rec?`<button class="btn" data-act="rec">추천 코스 담기</button>`:''}${p.ids.length?`<button class="btn ghost" data-act="clear">이날 비우기</button>`:''}</div>`;
+  if(!p.ids.length){
+    h+=`<ol class="tl"><li class="node base"><span class="t">${startTime(k)}</span><span class="pin base">${r.start.short}</span><div class="info"><b>${esc(r.start.name)}</b></div></li></ol><p class="empty" style="margin-top:10px">아래 목록에서 가고 싶은 곳을 눌러 담아주세요. 담을 때마다 가까운 순서로 동선을 정리해 드려요.</p>`;
+  }else{
+    h+=`<ol class="tl"><li class="node base"><span class="t">${startTime(k)}</span><span class="pin base">${r.start.short}</span><div class="info"><b>${esc(r.start.name)}</b><span class="meta">출발</span></div></li>`;
+    r.stops.forEach((s,i)=>{
+      h+=`<li class="leg">${s.leg<=2?'걸어서 잠깐':'차로 약 '+s.leg+'분'}</li>`;
+      h+=`<li class="node"><span class="t">${fm(s.arr)}</span><span class="pin ${s.p.cat}">${i+1}</span><div class="info"><button data-act="open" data-id="${s.p.id}">${esc(s.p.name)}</button><span class="meta">${CAT[s.p.cat]} · ${s.p.dur}분 머물기 · ${fm(s.dep)} 출발</span>${s.w.map(x=>`<span class="warn">${x}</span>`).join('')}</div><div class="ctl"><button data-act="up" data-i="${i}" ${i===0?'disabled':''} aria-label="위로">↑</button><button data-act="down" data-i="${i}" ${i===r.stops.length-1?'disabled':''} aria-label="아래로">↓</button><button data-act="toggle" data-id="${s.p.id}" aria-label="빼기">✕</button></div></li>`;
+    });
+    h+=`<li class="leg">${r.lastLeg<=2?'걸어서 잠깐':'차로 약 '+r.lastLeg+'분'}</li><li class="node base"><span class="t">${fm(r.endArr)}</span><span class="pin base">${r.end.short}</span><div class="info"><b>${esc(r.end.name)}</b><span class="meta">${r.end.id==='RES'?'숙소 도착':'반납 도착'}</span></div></li></ol>`;
+    if(r.end.id==='RENT'&&r.endArr>15*60-10)h+=`<span class="warn endwarn">렌터카 반납 3시보다 약 ${r.endArr-(15*60-10)}분 늦어요. 한 곳을 빼거나 출발을 당겨주세요.</span>`;
+    else if(r.end.id==='RES'&&r.endArr>21*60+30)h+=`<span class="warn endwarn">숙소 도착이 9시 반을 넘어요. 아이들 컨디션을 생각하면 한 곳 빼는 걸 추천해요.</span>`;
+  }
+  $('#plan').innerHTML=h;
+}
+function renderPicker(){
+  const k=S.cur,p=plan(k),rec=REC[k]||[],dow=parse(k).getDay();
+  const F=[['all','전체'],['play','놀거리'],['eat','식당'],['sweet','디저트'],['stay','리조트'],['rain','비 오는 날']];
+  let list=PLACES.filter(x=>filter==='all'||(filter==='rain'?x.rain:x.cat===filter));
+  list=[...list.filter(x=>rec.includes(x.id)),...list.filter(x=>!rec.includes(x.id))];
+  let h=`<h3>장소 담기</h3><div class="chips">${F.map(f=>`<button class="chip${filter===f[0]?' on':''}" data-act="filter" data-f="${f[0]}">${f[1]}</button>`).join('')}</div><ul class="list">`;
+  list.forEach(x=>{
+    const inn=p.ids.includes(x.id);
+    const others=days().filter(d=>d!==k&&plan(d).ids.includes(x.id)).map(d=>parse(d).getDate()+'일');
+    const tags=[];
+    if(rec.includes(x.id))tags.push('<span class="rec">이날 추천</span>');
+    if(x.closed&&x.closed.includes(dow))tags.push(`<span class="off">${DOW[dow]}요일 휴무 가능</span>`);
+    if(x.rain)tags.push('<span>비 오는 날</span>');
+    if(others.length)tags.push(`<span class="other">${others.join('·')}에 담김</span>`);
+    h+=`<li class="item ${x.cat}${inn?' in':''}"><button class="body" data-act="open" data-id="${x.id}"><b>${esc(x.name)}</b><span class="meta">${CAT[x.cat]} · ${x.area} · ${x.drive}</span><span class="desc">${esc(x.desc)}</span>${tags.length?`<span class="tags">${tags.join('')}</span>`:''}</button><button class="add" data-act="toggle" data-id="${x.id}">${inn?'담김':'담기'}</button></li>`;
+  });
+  $('#pick').innerHTML=h+'</ul>';
+}
+function renderAll(){renderTop();renderTabs();renderPlan();renderPicker();drawMap();save()}
+
+/* ---------- actions ---------- */
+function toggle(id){const k=S.cur,p=plan(k);const i=p.ids.indexOf(id);if(i>=0)p.ids.splice(i,1);else p.ids.push(id);if(!p.manual)optimize(k);renderAll()}
+function move(i,dir){const p=plan(S.cur),j=i+dir;if(j<0||j>=p.ids.length)return;[p.ids[i],p.ids[j]]=[p.ids[j],p.ids[i]];p.manual=true;renderAll()}
+
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-act]');if(!el)return;
+  const a=el.dataset.act;
+  if(a==='day'){S.cur=el.dataset.k;renderAll()}
+  else if(a==='toggle'){toggle(el.dataset.id);if($('#sheet').classList.contains('open')&&sheetMode==='place')openPlace(el.dataset.id)}
+  else if(a==='open')openPlace(el.dataset.id);
+  else if(a==='up')move(+el.dataset.i,-1);
+  else if(a==='down')move(+el.dataset.i,1);
+  else if(a==='auto'){const p=plan(S.cur);p.manual=false;optimize(S.cur);renderAll()}
+  else if(a==='rec'){const p=plan(S.cur);(REC[S.cur]||[]).forEach(id=>{if(!p.ids.includes(id))p.ids.push(id)});if(!p.manual)optimize(S.cur);renderAll()}
+  else if(a==='clear'){if(confirm('이날 담은 장소를 모두 뺄까요?')){const p=plan(S.cur);p.ids=[];p.manual=false;renderAll()}}
+  else if(a==='filter'){filter=el.dataset.f;renderPicker()}
+  else if(a==='cal')openCal();
+  else if(a==='calnav'){const d=new Date(cal.y,cal.m+(+el.dataset.d),1);cal.y=d.getFullYear();cal.m=d.getMonth();renderCal()}
+  else if(a==='calday')pickDay(el.dataset.k);
+  else if(a==='calok')confirmCal();
+  else if(a==='close')closeSheet();
+});
+document.addEventListener('change',e=>{if(e.target.id==='st'&&e.target.value){plan(S.cur).start=e.target.value;renderAll()}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
+
+/* ---------- sheet ---------- */
+let sheetMode=null;
+function openSheet(html,mode){sheetMode=mode;$('#sheetBody').innerHTML=html;$('#sheet').classList.add('open');$('#scrim').classList.add('open')}
+function closeSheet(){$('#sheet').classList.remove('open');$('#scrim').classList.remove('open');sheetMode=null}
+function openPlace(id){
+  const x=byId(id);if(!x)return;
+  const inn=plan(S.cur).ids.includes(id);
+  const search=x.url||('https://map.kakao.com/link/search/'+encodeURIComponent(x.q||x.name));
+  const route='https://map.kakao.com/link/to/'+encodeURIComponent(x.name)+','+x.lat+','+x.lng;
+  const dow=parse(S.cur).getDay();
+  openSheet(`<h4>${esc(x.name)}</h4><div class="meta">${CAT[x.cat]||''} · ${x.area} · 숙소에서 ${x.drive} · ${x.dur}분 정도</div><p>${esc(x.desc)}</p>${x.tip?`<p class="meta">${esc(x.tip)}</p>`:''}${x.closed&&x.closed.includes(dow)?`<span class="warn">평소 ${DOW[dow]}요일 휴무라고 안내돼 있어요.</span>`:''}<div id="smap"></div><div class="acts"><button class="btn ${inn?'':'dark'}" data-act="toggle" data-id="${x.id}">${inn?md(S.cur)+'에서 빼기':md(S.cur)+'에 담기'}</button><a class="btn" href="${search}" target="_blank" rel="noopener">카카오맵에서 보기</a><a class="btn" href="${route}" target="_blank" rel="noopener">길찾기</a>${x.tel?`<a class="btn" href="tel:${x.tel}">전화 ${x.tel}</a>`:''}</div>`,'place');
+  const box=$('#smap');
+  if(mapReady){try{new kakao.maps.StaticMap(box,{center:new kakao.maps.LatLng(x.lat,x.lng),level:5,marker:{position:new kakao.maps.LatLng(x.lat,x.lng)}});return}catch(e){}}
+  box.innerHTML=islandSVG(null,340,199,true,false,x);
+}
+
+/* ---------- calendar ---------- */
+let cal={};
+function openCal(){const d=parse(S.range.from);cal={y:d.getFullYear(),m:d.getMonth(),a:S.range.from,b:S.range.to,picking:false};renderCal()}
+function renderCal(){
+  const first=new Date(cal.y,cal.m,1),n=new Date(cal.y,cal.m+1,0).getDate();
+  let g=DOW.map(w=>`<div class="dw">${w}</div>`).join('');
+  for(let i=0;i<first.getDay();i++)g+='<div></div>';
+  for(let d=1;d<=n;d++){
+    const k=key(new Date(cal.y,cal.m,d)),dt=new Date(cal.y,cal.m,d);
+    let c='';if(cal.a&&cal.b&&k>cal.a&&k<cal.b)c='mid';if(k===cal.a||k===cal.b)c='edge';
+    if(dt.getDay()===0&&c!=='edge')c+=' sun';
+    g+=`<button class="${c}" data-act="calday" data-k="${k}">${d}${HOLI[k]?'<small>'+HOLI[k]+'</small>':''}</button>`;
+  }
+  const html=`<div class="calhead"><button class="btn ghost" data-act="calnav" data-d="-1" aria-label="이전 달">‹</button><b>${cal.y}년 ${cal.m+1}월</b><button class="btn ghost" data-act="calnav" data-d="1" aria-label="다음 달">›</button></div><div class="cal">${g}</div><p class="calhint">${cal.picking?'마지막 날을 눌러주세요.':'첫날과 마지막 날을 차례로 눌러주세요. 지금: '+md(cal.a)+' – '+(cal.b?md(cal.b):'?')}</p><div class="acts"><button class="btn dark" data-act="calok" ${cal.b?'':'disabled'}>이 기간으로 정하기</button><button class="btn" data-act="close">닫기</button></div>`;
+  if(sheetMode==='cal')$('#sheetBody').innerHTML=html;else openSheet(html,'cal');
+}
+function pickDay(k){
+  if(!cal.picking){cal.a=k;cal.b=null;cal.picking=true}
+  else{if(k<cal.a){cal.b=cal.a;cal.a=k}else cal.b=k;cal.picking=false;
+    const len=(parse(cal.b)-parse(cal.a))/864e5+1;if(len>10){alert('기간은 10일까지 고를 수 있어요.');cal.b=null;cal.picking=true}}
+  renderCal();
+}
+function confirmCal(){if(!cal.b)return;S.range={from:cal.a,to:cal.b};if(!days().includes(S.cur))S.cur=cal.a;closeSheet();renderAll()}
+
+/* ---------- kakao map ---------- */
+let map=null,mapReady=false,overlays=[],line=null;
+function drawMap(){
+  $('#fallback').innerHTML=islandSVG(S.cur,340,199,true,false);
+  if(!mapReady)return;
+  overlays.forEach(o=>o.setMap(null));overlays=[];if(line){line.setMap(null);line=null}
+  const r=compute(S.cur),pts=[r.start,...r.stops.map(s=>s.p),r.end];
+  const path=pts.map(p=>new kakao.maps.LatLng(p.lat,p.lng));
+  line=new kakao.maps.Polyline({map,path,strokeWeight:4,strokeColor:'#233038',strokeOpacity:.85,strokeStyle:'solid'});
+  const addPin=(p,label,cls,id,z)=>{
+    const el=document.createElement('div');el.className='pin '+cls;el.textContent=label;
+    if(id)el.addEventListener('click',()=>openPlace(id));
+    const o=new kakao.maps.CustomOverlay({position:new kakao.maps.LatLng(p.lat,p.lng),content:el,yAnchor:.5,xAnchor:.5,zIndex:z});
+    o.setMap(map);overlays.push(o);
+  };
+  addPin(r.start,r.start.short,'base',null,1);
+  if(r.end.id!==r.start.id)addPin(r.end,r.end.short,'base',null,1);
+  r.stops.forEach((s,i)=>addPin(s.p,i+1,s.p.cat,s.p.id,10+i));
+  const b=new kakao.maps.LatLngBounds();path.forEach(l=>b.extend(l));
+  if(r.stops.length===0&&r.start.id===r.end.id){map.setCenter(path[0]);map.setLevel(7)}
+  else map.setBounds(b,50,40,50,40);
+}
+function loadKakao(){
+  const s=document.createElement('script');
+  s.src='https://dapi.kakao.com/v2/maps/sdk.js?appkey='+KAKAO_KEY+'&autoload=false&libraries=services';
+  s.onload=()=>{try{kakao.maps.load(initMap)}catch(e){showHint()}};
+  s.onerror=showHint;
+  document.head.appendChild(s);
+  setTimeout(()=>{if(!mapReady)showHint()},8000);
+}
+function showHint(){$('#maphint').classList.add('show')}
+function initMap(){
+  map=new kakao.maps.Map($('#map'),{center:new kakao.maps.LatLng(33.38,126.56),level:10});
+  map.addControl(new kakao.maps.ZoomControl(),kakao.maps.ControlPosition.RIGHT);
+  mapReady=true;$('#map').classList.add('ready');$('#maphint').classList.remove('show');
+  drawMap();geocode();
+}
+window.addEventListener('resize',()=>{if(mapReady){map.relayout();drawMap()}});
+
+/* ---------- 정확한 좌표: 카카오 장소 검색 ---------- */
+function loadGeo(){try{return JSON.parse(localStorage.getItem(GEO))||{}}catch(e){return{}}}
+function applyGeo(g){
+  Object.keys(g).forEach(id=>{const p=byId(id);if(p){p.lat=g[id].lat;p.lng=g[id].lng;if(g[id].url)p.url=g[id].url;if(g[id].tel&&!p.tel)p.tel=g[id].tel}});
+  PLACES.filter(p=>p.atRes).forEach(p=>{p.lat=BASE.RES.lat;p.lng=BASE.RES.lng});
+}
+async function geocode(){
+  if(!kakao.maps.services)return;
+  const ps=new kakao.maps.services.Places(),g=loadGeo();
+  const todo=[...Object.values(BASE),...PLACES].filter(p=>p.q!==false&&!g[p.id]);
+  if(!todo.length)return;
+  for(const p of todo){
+    await new Promise(res=>{
+      try{ps.keywordSearch(p.q||p.name,(data,status)=>{
+        if(status===kakao.maps.services.Status.OK){const hit=data.find(d=>hav({lat:+d.y,lng:+d.x},p)<8);if(hit)g[p.id]={lat:+hit.y,lng:+hit.x,url:hit.place_url,tel:hit.phone}}
+        res();
+      },{location:new kakao.maps.LatLng(p.lat,p.lng),radius:20000})}catch(e){res()}
+    });
+    await new Promise(r=>setTimeout(r,120));
+  }
+  try{localStorage.setItem(GEO,JSON.stringify(g))}catch(e){}
+  applyGeo(g);
+  Object.keys(S.plans).forEach(k=>{if(!S.plans[k].manual&&days().includes(k))optimize(k)});
+  renderAll();
+}
+
+/* ---------- start ---------- */
+applyGeo(loadGeo());
+(function(){const t=key(new Date());if(days().includes(t))S.cur=t;else if(!days().includes(S.cur))S.cur=S.range.from})();
+renderAll();
+loadKakao();
+</script>
+</body>
+</html>
